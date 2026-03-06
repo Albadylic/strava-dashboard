@@ -9,7 +9,10 @@ const drawer = ref(true)
 const navItems = [
   { title: 'This Week', to: '/this-week', icon: 'mdi-calendar-week' },
   { title: 'This Month', to: '/this-month', icon: 'mdi-calendar-month' },
+  { title: 'Weekly Comparison', to: '/weekly-comparison', icon: 'mdi-chart-timeline-variant' },
   { title: 'Personal Records', to: '/personal-records', icon: 'mdi-trophy' },
+  { title: 'Pace Chart', to: '/pace-chart', icon: 'mdi-speedometer' },
+  { title: 'Distance Chart', to: '/distance-chart', icon: 'mdi-map-marker-distance' },
 ]
 
 function logout() {

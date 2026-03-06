@@ -1,23 +1,22 @@
-import { computed, onMounted } from 'vue'
+import { computed, watch, type Ref } from 'vue'
 import { startOfWeek, endOfWeek } from 'date-fns'
 import { useActivitiesStore } from '@/stores/activities.store'
 import type { ActivitySummary } from '@/types/activity'
 
-export function useWeekActivities() {
+export function useWeekActivities(anchorDate: Ref<Date>) {
   const store = useActivitiesStore()
 
-  const now = new Date()
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
+  const weekStart = computed(() => startOfWeek(anchorDate.value, { weekStartsOn: 1 }))
+  const weekEnd = computed(() => endOfWeek(anchorDate.value, { weekStartsOn: 1 }))
 
-  onMounted(() => {
-    store.fetchRange(weekStart, weekEnd)
-  })
+  watch(weekStart, () => {
+    store.fetchRange(weekStart.value, weekEnd.value)
+  }, { immediate: true })
 
   const weekRuns = computed(() =>
     store.runActivities.filter((a) => {
       const date = new Date(a.start_date_local)
-      return date >= weekStart && date <= weekEnd
+      return date >= weekStart.value && date <= weekEnd.value
     }),
   )
 

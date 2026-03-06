@@ -1,56 +1,68 @@
 import { computed } from 'vue'
 import { format } from 'date-fns'
 import { useActivitiesStore } from '@/stores/activities.store'
-import type { PersonalRecord, DistanceBucket } from '@/types/activity'
+import type { PersonalRecord } from '@/types/activity'
 
-const DISTANCE_BUCKETS: DistanceBucket[] = [
-  { label: '5K', key: '5k', minMeters: 4900, maxMeters: 5500 },
-  { label: '10K', key: '10k', minMeters: 9800, maxMeters: 10500 },
-  { label: 'Half Marathon', key: 'hm', minMeters: 20900, maxMeters: 21500 },
-  { label: 'Marathon', key: 'marathon', minMeters: 41900, maxMeters: 43000 },
+const PR_DISTANCES = [
+  { label: '5K', effortName: '5K', canonicalDistance: 5000 },
+  { label: '10K', effortName: '10K', canonicalDistance: 10000 },
+  { label: 'Half Marathon', effortName: 'Half-Marathon', canonicalDistance: 21097.5 },
+  { label: 'Marathon', effortName: 'Marathon', canonicalDistance: 42195 },
 ]
 
 export function usePersonalRecords() {
   const store = useActivitiesStore()
 
   const records = computed<PersonalRecord[]>(() => {
-    return DISTANCE_BUCKETS.map((bucket) => {
-      const matching = store.runActivities.filter(
-        (a) => a.distance >= bucket.minMeters && a.distance <= bucket.maxMeters,
-      )
+    return PR_DISTANCES.map((dist) => {
+      const matching: { activityId: number; movingTime: number }[] = []
 
-      if (matching.length === 0) {
-        return {
-          label: bucket.label,
-          distance: bucket.key,
-          activity: null,
+      for (const [activityId, efforts] of store.bestEfforts) {
+        for (const effort of efforts) {
+          if (effort.name === dist.effortName) {
+            matching.push({ activityId, movingTime: effort.moving_time })
+          }
         }
       }
 
-      const best = matching.reduce((fastest, current) =>
-        current.moving_time < fastest.moving_time ? current : fastest,
-      )
+      matching.sort((a, b) => a.movingTime - b.movingTime)
+
+      const topEfforts = matching.slice(0, 3).map((m) => {
+        const activity = store.activities.get(m.activityId)
+        return {
+          id: m.activityId,
+          name: activity?.name ?? 'Unknown',
+          date: activity
+            ? format(new Date(activity.start_date_local), 'MMM d, yyyy')
+            : '',
+          movingTime: m.movingTime,
+          pace: m.movingTime / dist.canonicalDistance,
+        }
+      })
 
       return {
-        label: bucket.label,
-        distance: bucket.key,
-        activity: {
-          id: best.id,
-          name: best.name,
-          date: format(new Date(best.start_date_local), 'MMM d, yyyy'),
-          movingTime: best.moving_time,
-          pace: best.moving_time / best.distance,
-        },
+        label: dist.label,
+        distance: dist.effortName.toLowerCase(),
+        canonicalDistance: dist.canonicalDistance,
+        topEfforts,
       }
     })
   })
+
+  async function fetchAll() {
+    await store.fetchAll()
+    await store.fetchBestEffortsForRuns()
+  }
 
   return {
     records,
     loading: computed(() => store.loadingAll),
     progress: computed(() => store.loadProgress),
+    loadingDetails: computed(() => store.loadingDetails),
+    detailProgress: computed(() => store.detailProgress),
+    detailTotal: computed(() => store.detailTotal),
     error: computed(() => store.error),
-    fetchAll: () => store.fetchAll(),
+    fetchAll,
     allFetched: computed(() => store.allFetched),
   }
 }

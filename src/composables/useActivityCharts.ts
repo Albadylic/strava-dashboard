@@ -4,11 +4,11 @@ import type { StravaActivity } from '@/types/strava'
 
 export function useDailyDistanceData(
   activities: Ref<StravaActivity[]>,
-  start: Date,
-  end: Date,
+  start: Ref<Date>,
+  end: Ref<Date>,
 ) {
   return computed(() => {
-    const days = eachDayOfInterval({ start, end })
+    const days = eachDayOfInterval({ start: start.value, end: end.value })
 
     const labels = days.map((d) => format(d, 'EEE d'))
     const data = days.map((day) => {

@@ -1,4 +1,4 @@
-import type { StravaActivity } from '@/types/strava'
+import type { StravaActivity, StravaDetailedActivity } from '@/types/strava'
 import { useAuthStore } from '@/stores/auth.store'
 
 const BASE_URL = 'https://www.strava.com/api/v3'
@@ -76,4 +76,8 @@ export async function fetchAllActivities(
   }
 
   return all
+}
+
+export async function fetchActivityDetail(id: number): Promise<StravaDetailedActivity> {
+  return apiFetch<StravaDetailedActivity>(`/activities/${id}`)
 }

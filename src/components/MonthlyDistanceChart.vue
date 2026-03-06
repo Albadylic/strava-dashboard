@@ -22,7 +22,9 @@ const props = defineProps<{
 }>()
 
 const activitiesRef = toRef(props, 'activities')
-const chartDataComputed = useDailyDistanceData(activitiesRef, props.monthStart, props.monthEnd)
+const monthStartRef = toRef(props, 'monthStart')
+const monthEndRef = toRef(props, 'monthEnd')
+const chartDataComputed = useDailyDistanceData(activitiesRef, monthStartRef, monthEndRef)
 
 const chartData = computed(() => ({
   labels: chartDataComputed.value.labels,

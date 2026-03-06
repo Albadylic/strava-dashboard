@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { computed, toRef, type Ref } from 'vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -22,8 +22,9 @@ const props = defineProps<{
 }>()
 
 const activitiesRef = toRef(props, 'activities')
-const weekEnd = endOfWeek(props.weekStart, { weekStartsOn: 1 })
-const chartDataComputed = useDailyDistanceData(activitiesRef, props.weekStart, weekEnd)
+const weekStartRef = toRef(props, 'weekStart')
+const weekEndRef = computed(() => endOfWeek(props.weekStart, { weekStartsOn: 1 }))
+const chartDataComputed = useDailyDistanceData(activitiesRef, weekStartRef, weekEndRef)
 
 const chartData = computed(() => ({
   labels: chartDataComputed.value.labels,

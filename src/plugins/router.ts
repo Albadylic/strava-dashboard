@@ -36,9 +36,24 @@ const router = createRouter({
           component: () => import('@/views/ThisMonthView.vue'),
         },
         {
+          path: 'weekly-comparison',
+          name: 'weekly-comparison',
+          component: () => import('@/views/WeeklyComparisonView.vue'),
+        },
+        {
           path: 'personal-records',
           name: 'personal-records',
           component: () => import('@/views/PersonalRecordsView.vue'),
+        },
+        {
+          path: 'pace-chart',
+          name: 'pace-chart',
+          component: () => import('@/views/PaceChartView.vue'),
+        },
+        {
+          path: 'distance-chart',
+          name: 'distance-chart',
+          component: () => import('@/views/DistanceChartView.vue'),
         },
       ],
     },

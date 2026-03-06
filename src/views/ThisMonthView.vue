@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { format } from 'date-fns'
+import { ref, computed } from 'vue'
+import { format, startOfMonth, isSameDay } from 'date-fns'
 import { useMonthActivities } from '@/composables/useMonthActivities'
 import { formatDistance, formatDuration, formatPaceFromSecondsPerMeter } from '@/composables/useFormatters'
 import ActivitySummaryCard from '@/components/ActivitySummaryCard.vue'
@@ -7,17 +8,31 @@ import ActivityTable from '@/components/ActivityTable.vue'
 import MonthlyDistanceChart from '@/components/MonthlyDistanceChart.vue'
 import PaceTrendChart from '@/components/PaceTrendChart.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import DateNavigation from '@/components/DateNavigation.vue'
 
-const { monthStart, monthEnd, monthRuns, summary, loading } = useMonthActivities()
-const dateRange = format(monthStart, 'MMMM yyyy')
+const selectedDate = ref(new Date())
+const { monthStart, monthEnd, monthRuns, summary, loading } = useMonthActivities(selectedDate)
+
+const isCurrentMonth = computed(() =>
+  isSameDay(monthStart.value, startOfMonth(new Date())),
+)
+
+const dateRange = computed(() => format(monthStart.value, 'MMMM yyyy'))
+
+const heading = computed(() => isCurrentMonth.value ? 'This Month' : dateRange.value)
 </script>
 
 <template>
   <div>
     <div class="d-flex align-center mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold">This Month</h1>
-        <p class="text-body-1 text-medium-emphasis">{{ dateRange }}</p>
+        <h1 class="text-h4 font-weight-bold">{{ heading }}</h1>
+        <DateNavigation
+          v-model="selectedDate"
+          :label="dateRange"
+          :is-current-period="isCurrentMonth"
+          mode="month"
+        />
       </div>
     </div>
 

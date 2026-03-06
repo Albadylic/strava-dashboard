@@ -1,23 +1,22 @@
-import { computed, onMounted } from 'vue'
+import { computed, watch, type Ref } from 'vue'
 import { startOfMonth, endOfMonth } from 'date-fns'
 import { useActivitiesStore } from '@/stores/activities.store'
 import type { ActivitySummary } from '@/types/activity'
 
-export function useMonthActivities() {
+export function useMonthActivities(anchorDate: Ref<Date>) {
   const store = useActivitiesStore()
 
-  const now = new Date()
-  const monthStart = startOfMonth(now)
-  const monthEnd = endOfMonth(now)
+  const monthStart = computed(() => startOfMonth(anchorDate.value))
+  const monthEnd = computed(() => endOfMonth(anchorDate.value))
 
-  onMounted(() => {
-    store.fetchRange(monthStart, monthEnd)
-  })
+  watch(monthStart, () => {
+    store.fetchRange(monthStart.value, monthEnd.value)
+  }, { immediate: true })
 
   const monthRuns = computed(() =>
     store.runActivities.filter((a) => {
       const date = new Date(a.start_date_local)
-      return date >= monthStart && date <= monthEnd
+      return date >= monthStart.value && date <= monthEnd.value
     }),
   )
 

@@ -49,3 +49,18 @@ export interface StravaActivity {
     summary_polyline: string | null
   }
 }
+
+export interface StravaBestEffort {
+  id: number
+  name: string
+  distance: number
+  moving_time: number
+  elapsed_time: number
+  start_date_local: string
+  pr_rank: number | null
+  achievements: { type_id: number; type: string; rank: number }[]
+}
+
+export interface StravaDetailedActivity extends StravaActivity {
+  best_efforts: StravaBestEffort[]
+}

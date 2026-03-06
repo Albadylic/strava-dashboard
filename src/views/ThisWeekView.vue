@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { format } from 'date-fns'
+import { ref, computed } from 'vue'
+import { format, startOfWeek, isSameDay } from 'date-fns'
 import { useWeekActivities } from '@/composables/useWeekActivities'
 import { formatDistance, formatDuration, formatPaceFromSecondsPerMeter } from '@/composables/useFormatters'
 import ActivitySummaryCard from '@/components/ActivitySummaryCard.vue'
@@ -7,17 +8,33 @@ import ActivityTable from '@/components/ActivityTable.vue'
 import WeeklyDistanceChart from '@/components/WeeklyDistanceChart.vue'
 import PaceTrendChart from '@/components/PaceTrendChart.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import DateNavigation from '@/components/DateNavigation.vue'
 
-const { weekStart, weekEnd, weekRuns, summary, loading } = useWeekActivities()
-const dateRange = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`
+const selectedDate = ref(new Date())
+const { weekStart, weekEnd, weekRuns, summary, loading } = useWeekActivities(selectedDate)
+
+const isCurrentWeek = computed(() =>
+  isSameDay(weekStart.value, startOfWeek(new Date(), { weekStartsOn: 1 })),
+)
+
+const dateRange = computed(() =>
+  `${format(weekStart.value, 'MMM d')} – ${format(weekEnd.value, 'MMM d, yyyy')}`,
+)
+
+const heading = computed(() => isCurrentWeek.value ? 'This Week' : dateRange.value)
 </script>
 
 <template>
   <div>
     <div class="d-flex align-center mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold">This Week</h1>
-        <p class="text-body-1 text-medium-emphasis">{{ dateRange }}</p>
+        <h1 class="text-h4 font-weight-bold">{{ heading }}</h1>
+        <DateNavigation
+          v-model="selectedDate"
+          :label="dateRange"
+          :is-current-period="isCurrentWeek"
+          mode="week"
+        />
       </div>
     </div>
 

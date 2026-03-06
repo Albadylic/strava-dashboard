@@ -4,7 +4,7 @@ import { usePersonalRecords } from '@/composables/usePersonalRecords'
 import PersonalRecordCard from '@/components/PersonalRecordCard.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
-const { records, loading, progress, allFetched, fetchAll } = usePersonalRecords()
+const { records, loading, progress, loadingDetails, detailProgress, detailTotal, allFetched, fetchAll } = usePersonalRecords()
 
 onMounted(() => {
   if (!allFetched.value) {
@@ -26,6 +26,18 @@ onMounted(() => {
       <v-progress-circular indeterminate color="primary" size="48" class="mb-2" />
       <p class="text-body-1 text-medium-emphasis">
         Loading activities... {{ progress }} fetched
+      </p>
+    </div>
+
+    <div v-else-if="loadingDetails" class="text-center mb-6">
+      <v-progress-linear
+        :model-value="detailTotal > 0 ? (detailProgress / detailTotal) * 100 : 0"
+        color="primary"
+        class="mb-2"
+        rounded
+      />
+      <p class="text-body-1 text-medium-emphasis">
+        Fetching run details... {{ detailProgress }} / {{ detailTotal }}
       </p>
     </div>
 
