@@ -10,15 +10,21 @@ export function useDailyDistanceData(
   return computed(() => {
     const days = eachDayOfInterval({ start: start.value, end: end.value })
 
-    const labels = days.map((d) => format(d, 'EEE d'))
-    const data = days.map((day) => {
-      const dayTotal = activities.value
-        .filter((a) => isSameDay(new Date(a.start_date_local), day))
-        .reduce((sum, a) => sum + a.distance / 1000, 0)
-      return Math.round(dayTotal * 100) / 100
-    })
+    const labels: string[] = []
+    const data: number[] = []
+    const activityGroups: StravaActivity[][] = []
 
-    return { labels, data }
+    for (const day of days) {
+      labels.push(format(day, 'EEE d'))
+      const dayActivities = activities.value.filter((a) =>
+        isSameDay(new Date(a.start_date_local), day),
+      )
+      const dayTotal = dayActivities.reduce((sum, a) => sum + a.distance / 1000, 0)
+      data.push(Math.round(dayTotal * 100) / 100)
+      activityGroups.push(dayActivities)
+    }
+
+    return { labels, data, activityGroups }
   })
 }
 
@@ -34,6 +40,6 @@ export function usePaceTrendData(activities: Ref<StravaActivity[]>) {
       return Math.round(paceMinPerKm * 100) / 100
     })
 
-    return { labels, data }
+    return { labels, data, activities: sorted }
   })
 }

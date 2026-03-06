@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import type { StravaActivity } from '@/types/strava'
 import { usePaceTrendData } from '@/composables/useActivityCharts'
+import { useChartClick } from '@/composables/useChartClick'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -21,8 +22,17 @@ const props = defineProps<{
   activities: StravaActivity[]
 }>()
 
+const emit = defineEmits<{
+  dataPointClick: [activity: StravaActivity]
+}>()
+
 const activitiesRef = toRef(props, 'activities')
 const paceData = usePaceTrendData(activitiesRef)
+
+const { onClick, onHover } = useChartClick((index) => {
+  const activity = paceData.value.activities[index]
+  if (activity) emit('dataPointClick', activity)
+})
 
 const chartData = computed(() => ({
   labels: paceData.value.labels,
@@ -35,14 +45,17 @@ const chartData = computed(() => ({
       fill: true,
       tension: 0.3,
       pointRadius: 4,
+      pointHitRadius: 8,
       pointBackgroundColor: '#FC4C02',
     },
   ],
 }))
 
-const options = {
+const options = computed(() => ({
   responsive: true,
   maintainAspectRatio: true,
+  onClick,
+  onHover,
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -74,7 +87,7 @@ const options = {
       ticks: { color: '#aaa' },
     },
   },
-}
+}))
 </script>
 
 <template>

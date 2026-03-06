@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -13,6 +13,9 @@ import {
   Filler,
 } from 'chart.js'
 import { useChartView } from '@/composables/useChartView'
+import { useChartClick } from '@/composables/useChartClick'
+import type { StravaActivity } from '@/types/strava'
+import ActivityDetailModal from '@/components/ActivityDetailModal.vue'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
 
@@ -27,6 +30,9 @@ const {
   fetchAll,
 } = useChartView()
 
+const selectedActivity = ref<StravaActivity | null>(null)
+const showModal = ref(false)
+
 const periodOptions = [
   { title: 'Last Month', value: 'last-month' },
   { title: 'Last 6 Months', value: 'last-6-months' },
@@ -37,6 +43,15 @@ const periodOptions = [
 const activeData = computed(() =>
   aggregationMode.value === 'weekly' ? weeklyDistanceData.value : perActivityDistanceData.value,
 )
+
+const { onClick, onHover } = useChartClick((index) => {
+  if (aggregationMode.value !== 'per-activity') return
+  const activity = perActivityDistanceData.value.activities[index]
+  if (activity) {
+    selectedActivity.value = activity
+    showModal.value = true
+  }
+})
 
 const chartData = computed(() => ({
   labels: activeData.value.labels,
@@ -49,14 +64,16 @@ const chartData = computed(() => ({
       fill: true,
       tension: 0.3,
       pointRadius: 4,
+      pointHitRadius: 8,
       pointBackgroundColor: '#FC4C02',
     },
   ],
 }))
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: true,
+  ...(aggregationMode.value === 'per-activity' ? { onClick, onHover } : {}),
   plugins: {
     legend: { display: false },
     tooltip: {
@@ -79,7 +96,7 @@ const chartOptions = {
       ticks: { color: '#aaa', maxRotation: 45 },
     },
   },
-}
+}))
 
 onMounted(() => {
   if (!allFetched.value) {
@@ -128,5 +145,7 @@ onMounted(() => {
         No distance data available for the selected period
       </div>
     </v-card>
+
+    <ActivityDetailModal v-model="showModal" :activity="selectedActivity" />
   </div>
 </template>

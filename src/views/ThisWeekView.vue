@@ -3,14 +3,23 @@ import { ref, computed } from 'vue'
 import { format, startOfWeek, isSameDay } from 'date-fns'
 import { useWeekActivities } from '@/composables/useWeekActivities'
 import { formatDistance, formatDuration, formatPaceFromSecondsPerMeter } from '@/composables/useFormatters'
+import type { StravaActivity } from '@/types/strava'
 import ActivitySummaryCard from '@/components/ActivitySummaryCard.vue'
 import ActivityTable from '@/components/ActivityTable.vue'
 import WeeklyDistanceChart from '@/components/WeeklyDistanceChart.vue'
 import PaceTrendChart from '@/components/PaceTrendChart.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import DateNavigation from '@/components/DateNavigation.vue'
+import ActivityDetailModal from '@/components/ActivityDetailModal.vue'
 
 const selectedDate = ref(new Date())
+const selectedActivity = ref<StravaActivity | null>(null)
+const showModal = ref(false)
+
+function openDetail(activity: StravaActivity) {
+  selectedActivity.value = activity
+  showModal.value = true
+}
 const { weekStart, weekEnd, weekRuns, summary, loading } = useWeekActivities(selectedDate)
 
 const isCurrentWeek = computed(() =>
@@ -78,13 +87,13 @@ const heading = computed(() => isCurrentWeek.value ? 'This Week' : dateRange.val
       <v-col cols="12" md="6">
         <v-card class="pa-4">
           <v-card-title class="text-h6 pb-4">Distance by Day</v-card-title>
-          <WeeklyDistanceChart :activities="weekRuns" :week-start="weekStart" />
+          <WeeklyDistanceChart :activities="weekRuns" :week-start="weekStart" @data-point-click="openDetail" />
         </v-card>
       </v-col>
       <v-col cols="12" md="6">
         <v-card class="pa-4">
           <v-card-title class="text-h6 pb-4">Pace Trend</v-card-title>
-          <PaceTrendChart :activities="weekRuns" />
+          <PaceTrendChart :activities="weekRuns" @data-point-click="openDetail" />
         </v-card>
       </v-col>
     </v-row>
@@ -93,5 +102,6 @@ const heading = computed(() => isCurrentWeek.value ? 'This Week' : dateRange.val
       <v-card-title class="text-h6">Activities</v-card-title>
       <ActivityTable :activities="weekRuns" />
     </v-card>
+    <ActivityDetailModal v-model="showModal" :activity="selectedActivity" />
   </div>
 </template>

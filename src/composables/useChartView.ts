@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { format, startOfISOWeek, subMonths, subYears } from 'date-fns'
 import { useActivitiesStore } from '@/stores/activities.store'
 import type { TimePeriod, AggregationMode } from '@/types/activity'
+import type { StravaActivity } from '@/types/strava'
 
 export function useChartView() {
   const store = useActivitiesStore()
@@ -43,7 +44,7 @@ export function useChartView() {
     const data = sortedRuns.value.map((a) =>
       Math.round(((a.moving_time / 60) / (a.distance / 1000)) * 100) / 100,
     )
-    return { labels, data }
+    return { labels, data, activities: sortedRuns.value }
   })
 
   const perActivityDistanceData = computed(() => {
@@ -53,7 +54,7 @@ export function useChartView() {
     const data = sortedRuns.value.map((a) =>
       Math.round((a.distance / 1000) * 100) / 100,
     )
-    return { labels, data }
+    return { labels, data, activities: sortedRuns.value }
   })
 
   const weekGroups = computed(() => {
@@ -71,6 +72,7 @@ export function useChartView() {
   const weeklyPaceData = computed(() => {
     const labels: string[] = []
     const data: number[] = []
+    const activityGroups: StravaActivity[][] = []
     for (const [key, runs] of weekGroups.value) {
       const totalTime = runs.reduce((s, r) => s + r.moving_time, 0)
       const totalDist = runs.reduce((s, r) => s + r.distance, 0)
@@ -78,19 +80,22 @@ export function useChartView() {
       data.push(
         Math.round(((totalTime / 60) / (totalDist / 1000)) * 100) / 100,
       )
+      activityGroups.push(runs)
     }
-    return { labels, data }
+    return { labels, data, activityGroups }
   })
 
   const weeklyDistanceData = computed(() => {
     const labels: string[] = []
     const data: number[] = []
+    const activityGroups: StravaActivity[][] = []
     for (const [key, runs] of weekGroups.value) {
       const totalDist = runs.reduce((s, r) => s + r.distance, 0)
       labels.push(format(new Date(key), 'MMM d'))
       data.push(Math.round((totalDist / 1000) * 100) / 100)
+      activityGroups.push(runs)
     }
-    return { labels, data }
+    return { labels, data, activityGroups }
   })
 
   async function fetchAll() {

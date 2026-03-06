@@ -3,14 +3,23 @@ import { ref, computed } from 'vue'
 import { format, startOfMonth, isSameDay } from 'date-fns'
 import { useMonthActivities } from '@/composables/useMonthActivities'
 import { formatDistance, formatDuration, formatPaceFromSecondsPerMeter } from '@/composables/useFormatters'
+import type { StravaActivity } from '@/types/strava'
 import ActivitySummaryCard from '@/components/ActivitySummaryCard.vue'
 import ActivityTable from '@/components/ActivityTable.vue'
 import MonthlyDistanceChart from '@/components/MonthlyDistanceChart.vue'
 import PaceTrendChart from '@/components/PaceTrendChart.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import DateNavigation from '@/components/DateNavigation.vue'
+import ActivityDetailModal from '@/components/ActivityDetailModal.vue'
 
 const selectedDate = ref(new Date())
+const selectedActivity = ref<StravaActivity | null>(null)
+const showModal = ref(false)
+
+function openDetail(activity: StravaActivity) {
+  selectedActivity.value = activity
+  showModal.value = true
+}
 const { monthStart, monthEnd, monthRuns, summary, loading } = useMonthActivities(selectedDate)
 
 const isCurrentMonth = computed(() =>
@@ -76,13 +85,13 @@ const heading = computed(() => isCurrentMonth.value ? 'This Month' : dateRange.v
       <v-col cols="12" md="6">
         <v-card class="pa-4">
           <v-card-title class="text-h6 pb-4">Distance by Day</v-card-title>
-          <MonthlyDistanceChart :activities="monthRuns" :month-start="monthStart" :month-end="monthEnd" />
+          <MonthlyDistanceChart :activities="monthRuns" :month-start="monthStart" :month-end="monthEnd" @data-point-click="openDetail" />
         </v-card>
       </v-col>
       <v-col cols="12" md="6">
         <v-card class="pa-4">
           <v-card-title class="text-h6 pb-4">Pace Trend</v-card-title>
-          <PaceTrendChart :activities="monthRuns" />
+          <PaceTrendChart :activities="monthRuns" @data-point-click="openDetail" />
         </v-card>
       </v-col>
     </v-row>
@@ -91,5 +100,6 @@ const heading = computed(() => isCurrentMonth.value ? 'This Month' : dateRange.v
       <v-card-title class="text-h6">Activities</v-card-title>
       <ActivityTable :activities="monthRuns" />
     </v-card>
+    <ActivityDetailModal v-model="showModal" :activity="selectedActivity" />
   </div>
 </template>
