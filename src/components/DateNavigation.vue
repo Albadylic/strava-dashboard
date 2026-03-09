@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { addWeeks, addMonths } from 'date-fns'
 
 const props = defineProps<{
@@ -14,6 +14,13 @@ const emit = defineEmits<{
 }>()
 
 const menuOpen = ref(false)
+const pickerMonth = ref(props.modelValue.getMonth())
+const pickerYear = ref(props.modelValue.getFullYear())
+
+watch(() => props.modelValue, (val) => {
+  pickerMonth.value = val.getMonth()
+  pickerYear.value = val.getFullYear()
+})
 
 function prev() {
   const newDate = props.mode === 'week'
@@ -39,6 +46,11 @@ function onDatePicked(date: unknown) {
     emit('update:modelValue', date)
   }
 }
+
+function onMonthPicked(month: number) {
+  menuOpen.value = false
+  emit('update:modelValue', new Date(pickerYear.value, month, 1))
+}
 </script>
 
 <template>
@@ -55,9 +67,19 @@ function onDatePicked(date: unknown) {
         </v-btn>
       </template>
       <v-date-picker
+        v-if="mode === 'month'"
+        :view-mode="'months'"
+        :month="pickerMonth"
+        :year="pickerYear"
+        @update:month="onMonthPicked"
+        @update:year="(y: number) => pickerYear = y"
+      />
+      <v-date-picker
+        v-else
         :model-value="modelValue"
         @update:model-value="onDatePicked"
         show-adjacent-months
+        first-day-of-week="1"
       />
     </v-menu>
 
