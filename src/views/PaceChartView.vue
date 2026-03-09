@@ -12,6 +12,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js'
+import type { TooltipItem } from 'chart.js'
 import { useChartView } from '@/composables/useChartView'
 import { useChartClick } from '@/composables/useChartClick'
 import type { StravaActivity } from '@/types/strava'
@@ -111,9 +112,10 @@ const chartOptions = computed(() => ({
     legend: { display: false },
     tooltip: {
       callbacks: {
-        label: (ctx: { parsed: { y: number } }) => {
-          const mins = Math.floor(ctx.parsed.y)
-          const secs = Math.round((ctx.parsed.y - mins) * 60)
+        label: (ctx: TooltipItem<'line'>) => {
+          const y = ctx.parsed.y ?? 0
+          const mins = Math.floor(y)
+          const secs = Math.round((y - mins) * 60)
           return `${mins}:${String(secs).padStart(2, '0')} /km`
         },
       },

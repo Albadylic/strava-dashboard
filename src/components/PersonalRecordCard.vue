@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PersonalRecord } from '@/types/activity'
 import { formatDuration, formatPaceFromSecondsPerMeter } from '@/composables/useFormatters'
 
-defineProps<{
+const props = defineProps<{
   record: PersonalRecord
 }>()
 
 const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32']
+const firstEffort = computed(() => props.record.topEfforts[0]!)
 </script>
 
 <template>
@@ -22,20 +24,20 @@ const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32']
 
     <template v-if="record.topEfforts.length > 0">
       <p class="text-h4 font-weight-bold primary--text mb-2">
-        {{ formatDuration(record.topEfforts[0].movingTime) }}
+        {{ formatDuration(firstEffort.movingTime) }}
       </p>
       <div class="d-flex flex-column ga-1 mb-4">
         <div class="d-flex align-center text-body-2 text-medium-emphasis">
           <v-icon icon="mdi-speedometer" size="16" class="mr-1" />
-          {{ formatPaceFromSecondsPerMeter(record.topEfforts[0].pace) }}
+          {{ formatPaceFromSecondsPerMeter(firstEffort.pace) }}
         </div>
         <div class="d-flex align-center text-body-2 text-medium-emphasis">
           <v-icon icon="mdi-calendar" size="16" class="mr-1" />
-          {{ record.topEfforts[0].date }}
+          {{ firstEffort.date }}
         </div>
         <div class="d-flex align-center text-body-2 text-medium-emphasis">
           <v-icon icon="mdi-label" size="16" class="mr-1" />
-          {{ record.topEfforts[0].name }}
+          {{ firstEffort.name }}
         </div>
       </div>
 
