@@ -55,6 +55,11 @@ const router = createRouter({
           name: 'distance-chart',
           component: () => import('@/views/DistanceChartView.vue'),
         },
+        {
+          path: 'insights',
+          name: 'insights',
+          component: () => import('@/views/InsightsView.vue'),
+        },
       ],
     },
   ],

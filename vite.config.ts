@@ -13,13 +13,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  server: {
-    proxy: {
-      '/api/strava-token': {
-        target: 'https://www.strava.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/strava-token/, '/oauth/token'),
-      },
-    },
-  },
 })

@@ -24,7 +24,6 @@ export async function exchangeCodeForToken(code: string): Promise<StravaTokenRes
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       client_id: import.meta.env.VITE_STRAVA_CLIENT_ID,
-      client_secret: import.meta.env.VITE_STRAVA_CLIENT_SECRET,
       code,
       grant_type: 'authorization_code',
     }),
@@ -43,7 +42,6 @@ export async function refreshAccessToken(refreshToken: string): Promise<StravaRe
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       client_id: import.meta.env.VITE_STRAVA_CLIENT_ID,
-      client_secret: import.meta.env.VITE_STRAVA_CLIENT_SECRET,
       grant_type: 'refresh_token',
       refresh_token: refreshToken,
     }),

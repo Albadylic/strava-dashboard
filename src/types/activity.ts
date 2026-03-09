@@ -30,6 +30,6 @@ export interface WeekSummary {
   prs: { distanceName: string; movingTime: number }[]
 }
 
-export type TimePeriod = 'last-month' | 'last-6-months' | 'last-year' | 'all-time'
+export type TimePeriod = 'last-month' | 'last-3-months' | 'last-6-months' | 'last-year' | 'all-time'
 
 export type AggregationMode = 'per-activity' | 'weekly'

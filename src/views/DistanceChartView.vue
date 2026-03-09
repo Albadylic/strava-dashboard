@@ -28,13 +28,45 @@ const {
   progress,
   allFetched,
   fetchAll,
+  distanceRange,
+  elevationRange,
+  paceRange,
+  hrRange,
+  filterBounds,
 } = useChartView()
 
 const selectedActivity = ref<StravaActivity | null>(null)
 const showModal = ref(false)
+const showFilters = ref(false)
+
+function fmtPace(v: number) {
+  const mins = Math.floor(v)
+  const secs = Math.round((v - mins) * 60)
+  return `${mins}:${String(secs).padStart(2, '0')}`
+}
+
+const pacePresets = [
+  { label: 'Easy',     min: 6,   max: 7   },
+  { label: 'Moderate', min: 5,   max: 6   },
+  { label: 'Tempo',    min: 4,   max: 5   },
+]
+
+function applyPreset(preset: { min: number; max: number }) {
+  const active = paceRange.value[0] === preset.min && paceRange.value[1] === preset.max
+  if (active) {
+    paceRange.value = [filterBounds.value.minPace, filterBounds.value.maxPace]
+  } else {
+    paceRange.value = [preset.min, preset.max]
+  }
+}
+
+function isPresetActive(preset: { min: number; max: number }) {
+  return paceRange.value[0] === preset.min && paceRange.value[1] === preset.max
+}
 
 const periodOptions = [
   { title: 'Last Month', value: 'last-month' },
+  { title: 'Last 3 Months', value: 'last-3-months' },
   { title: 'Last 6 Months', value: 'last-6-months' },
   { title: 'Last Year', value: 'last-year' },
   { title: 'All Time', value: 'all-time' },
@@ -125,8 +157,54 @@ onMounted(() => {
           hide-details
           style="max-width: 200px"
         />
+        <v-btn
+          :variant="showFilters ? 'tonal' : 'outlined'"
+          density="compact"
+          prepend-icon="mdi-tune"
+          @click="showFilters = !showFilters"
+        >Filters</v-btn>
       </div>
     </div>
+
+    <v-expand-transition>
+      <v-card v-if="showFilters" class="pa-3 mb-4">
+        <div class="d-flex align-center ga-2 mb-3">
+          <span class="text-caption text-medium-emphasis">Quick select:</span>
+          <v-btn v-for="preset in pacePresets" :key="preset.label"
+            :variant="isPresetActive(preset) ? 'tonal' : 'outlined'"
+            :color="isPresetActive(preset) ? 'primary' : undefined"
+            size="x-small" density="compact" class="px-3 py-3"
+            @click="applyPreset(preset)"
+          >{{ preset.label }}</v-btn>
+        </div>
+        <v-row dense align="center">
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Distance (km): {{ distanceRange[0] }}–{{ distanceRange[1] }}</div>
+            <v-range-slider v-model="distanceRange"
+              :min="filterBounds.minDist" :max="filterBounds.maxDist" :step="0.5"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Elevation (m): {{ elevationRange[0] }}–{{ elevationRange[1] }}</div>
+            <v-range-slider v-model="elevationRange"
+              :min="filterBounds.minElev" :max="filterBounds.maxElev" :step="5"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Pace: {{ fmtPace(paceRange[0]) }}–{{ fmtPace(paceRange[1]) }} /km</div>
+            <v-range-slider v-model="paceRange"
+              :min="filterBounds.minPace" :max="filterBounds.maxPace" :step="0.1"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col v-if="filterBounds.hasHrData">
+            <div class="text-caption text-medium-emphasis mb-n1">HR (bpm): {{ hrRange[0] }}–{{ hrRange[1] }}</div>
+            <v-range-slider v-model="hrRange"
+              :min="filterBounds.minHr" :max="filterBounds.maxHr" :step="1"
+              density="compact" hide-details color="primary" />
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-expand-transition>
 
     <div v-if="loading" class="text-center mb-6">
       <v-progress-circular indeterminate color="primary" size="48" class="mb-2" />

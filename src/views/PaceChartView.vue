@@ -22,6 +22,11 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const {
   timePeriod,
   aggregationMode,
+  distanceRange,
+  elevationRange,
+  paceRange,
+  hrRange,
+  filterBounds,
   perActivityPaceData,
   weeklyPaceData,
   loading,
@@ -30,11 +35,39 @@ const {
   fetchAll,
 } = useChartView()
 
+function fmtPace(v: number) {
+  const mins = Math.floor(v)
+  const secs = Math.round((v - mins) * 60)
+  return `${mins}:${String(secs).padStart(2, '0')}`
+}
+
 const selectedActivity = ref<StravaActivity | null>(null)
 const showModal = ref(false)
+const showFilters = ref(false)
+
+const distancePresets = [
+  { label: '5K', min: 4.5, max: 6 },
+  { label: '10K', min: 9, max: 12 },
+  { label: 'Half', min: 19, max: 23 },
+  { label: 'Marathon', min: 40, max: 45 },
+]
+
+function applyPreset(preset: { min: number; max: number }) {
+  const active = distanceRange.value[0] === preset.min && distanceRange.value[1] === preset.max
+  if (active) {
+    distanceRange.value = [filterBounds.value.minDist, filterBounds.value.maxDist]
+  } else {
+    distanceRange.value = [preset.min, preset.max]
+  }
+}
+
+function isPresetActive(preset: { min: number; max: number }) {
+  return distanceRange.value[0] === preset.min && distanceRange.value[1] === preset.max
+}
 
 const periodOptions = [
   { title: 'Last Month', value: 'last-month' },
+  { title: 'Last 3 Months', value: 'last-3-months' },
   { title: 'Last 6 Months', value: 'last-6-months' },
   { title: 'Last Year', value: 'last-year' },
   { title: 'All Time', value: 'all-time' },
@@ -134,8 +167,57 @@ onMounted(() => {
           hide-details
           style="max-width: 200px"
         />
+        <v-btn
+          :variant="showFilters ? 'tonal' : 'outlined'"
+          density="compact"
+          prepend-icon="mdi-tune"
+          @click="showFilters = !showFilters"
+        >Filters</v-btn>
       </div>
     </div>
+
+    <v-expand-transition>
+      <v-card v-if="showFilters" class="pa-3 mb-4">
+        <div class="d-flex align-center ga-2 mb-3">
+          <span class="text-caption text-medium-emphasis">Quick select:</span>
+          <v-btn
+            v-for="preset in distancePresets"
+            :key="preset.label"
+            :variant="isPresetActive(preset) ? 'tonal' : 'outlined'"
+            :color="isPresetActive(preset) ? 'primary' : undefined"
+            size="x-small"
+            density="compact"
+            @click="applyPreset(preset)"
+          >{{ preset.label }}</v-btn>
+        </div>
+        <v-row dense align="center">
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Distance (km): {{ distanceRange[0] }}–{{ distanceRange[1] }}</div>
+            <v-range-slider v-model="distanceRange"
+              :min="filterBounds.minDist" :max="filterBounds.maxDist" :step="0.5"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Elevation (m): {{ elevationRange[0] }}–{{ elevationRange[1] }}</div>
+            <v-range-slider v-model="elevationRange"
+              :min="filterBounds.minElev" :max="filterBounds.maxElev" :step="5"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col>
+            <div class="text-caption text-medium-emphasis mb-n1">Pace: {{ fmtPace(paceRange[0]) }}–{{ fmtPace(paceRange[1]) }} /km</div>
+            <v-range-slider v-model="paceRange"
+              :min="filterBounds.minPace" :max="filterBounds.maxPace" :step="0.1"
+              density="compact" hide-details color="primary" />
+          </v-col>
+          <v-col v-if="filterBounds.hasHrData">
+            <div class="text-caption text-medium-emphasis mb-n1">HR (bpm): {{ hrRange[0] }}–{{ hrRange[1] }}</div>
+            <v-range-slider v-model="hrRange"
+              :min="filterBounds.minHr" :max="filterBounds.maxHr" :step="1"
+              density="compact" hide-details color="primary" />
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-expand-transition>
 
     <div v-if="loading" class="text-center mb-6">
       <v-progress-circular indeterminate color="primary" size="48" class="mb-2" />

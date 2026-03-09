@@ -13,6 +13,7 @@ const navItems = [
   { title: 'Personal Records', to: '/personal-records', icon: 'mdi-trophy' },
   { title: 'Pace Chart', to: '/pace-chart', icon: 'mdi-speedometer' },
   { title: 'Distance Chart', to: '/distance-chart', icon: 'mdi-map-marker-distance' },
+  { title: 'Insights', to: '/insights', icon: 'mdi-lightbulb-outline' },
 ]
 
 function logout() {
